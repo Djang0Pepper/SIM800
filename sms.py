@@ -287,6 +287,15 @@ class SMS(object):
         if status is None: return status
         return NetworkStatus(int(status))
 
+    def getNetworkName(self):
+        """
+        This gets the network name of the sim card in your module.
+        Tested with the Sim 800l
+        """
+        self._logger.debug("Get network name")
+        status = self.getSingleResponse("AT+ COPS?","OK","+COPS:",index=1)
+        return status
+
     def getRSSI(self):
         """
         Get the current signal strength in 'bars'
