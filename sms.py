@@ -290,7 +290,7 @@ class SMS(object):
     def getNetworkName(self):
         """
         This gets the network name of the sim card in your module.
-        Tested with the Sim 800l
+        This was tested with the Sim 800l.
         """
         self._logger.debug("Get network name")
         status = self.getSingleResponse("AT+ COPS?","OK","+COPS:",index=1)
@@ -427,6 +427,15 @@ class SMS(object):
             return False        
         status=self.sendATCmdWaitResp("AT+CMGD={:03d}".format(number), "OK")
         return status==ATResp.OK
+        
+    def delete_all_messages(self):
+        """
+        This deletes all the messages on your sim card(the sim card inside your sim module)
+        This was tested with the Sim 800l
+        """
+        self._logger.debug("Deleting all sms")
+        reply = self.getSingleResponse('AT+CMGD=1,4',"OK","OK","1")
+        return reply
 
     def sendSMS(self, phoneNumber, msg):
         """
