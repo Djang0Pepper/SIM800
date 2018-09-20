@@ -237,12 +237,12 @@ class SMS(object):
 
     def setEchoOff(self):
         """
-        Switch off command echoing to simply response parsing.
+        Switch off command echoing to simplify response parsing.
         """
-        self._logger.debug("Set Echo Off")
+        self._logger.debug("Set and Test Echo Off")
         self.sendATCmdWaitResp("ATE0", "OK")
-        status=self.sendATCmdWaitResp("ATE0", "OK")
-        return status==ATResp.OK
+        status,lines=self.sendATCmdWaitReturnResp("ATE0", "OK")
+        return status==ATResp.OK and not len(lines)
 
     def getLastError(self):
         """
