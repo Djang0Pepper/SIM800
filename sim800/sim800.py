@@ -1,24 +1,11 @@
 from datetime import datetime
 import logging
-from time import sleep
+import sys
 from enum import IntEnum
 from serial import Serial
-# import RPi.GPIO as IO, atexit, logging, sys
 
-PORT="/dev/ttyS0"
-BAUD=9600
-GSM_ON=11
-GSM_RESET=12
+
 DATE_FMT='"%y/%m/%d,%H:%M:%S%z"'
-
-
-BALANCE_USSD="*100#"
-
-# Balance: *100*7#
-# Remaining Credit: *100#
-# Voicemail: 443 (costs 8p!)
-# Text Delivery Receipt (start with): *0#
-# Hide calling number: #31#
 
 
 class ATResp(IntEnum):
@@ -98,13 +85,9 @@ class NetworkStatus(IntEnum):
     RegisteredRoaming=5
 
 
-@atexit.register
-def cleanup(): IO.cleanup()
-
-
 class SIM800( object ):
     
-    def __init__( self, port=PORT, baud=BAUD, logger=None, loglevel=logging.WARNING ):
+    def __init__( self, port, baud, logger=None, loglevel=logging.WARNING ):
         
         self._port=port
         self._baud=baud
@@ -127,22 +110,14 @@ class SIM800( object ):
         Setup the IO to control the power and reset inputs and the serial port.
         """
         self._logger.debug("Setup")
-        IO.setmode(IO.BOARD)
-        IO.setup(GSM_ON, IO.OUT, initial=IO.LOW)
-        IO.setup(GSM_RESET, IO.OUT, initial=IO.LOW)
         self._serial=Serial(self._port, self._baud)
 
     
     def reset( self ):
         """
-        Reset (turn on) the SIM800 module by taking the power line for >1s
-        and then wait 5s for the module to boot.
+        Use to do any hardware-specific reset in subclasses. 
         """
-        self._logger.debug("Reset (duration ~6.2s)")
-        IO.output(GSM_ON, IO.HIGH)
-        sleep(1.2)
-        IO.output(GSM_ON, IO.LOW)
-        sleep(5.)
+        pass
 
 
     def sendATCmdWaitResp(self, cmd, response, timeout=.5, interByteTimeout=.1, attempts=1, addCR=False):
@@ -526,31 +501,3 @@ class SIM800( object ):
         Convenience method. Wait for the phone to ring.
         """
         self.waitForLine( "RING" )
-
-
-if __name__=="__main__":
-    s=SIM800(PORT,BAUD,loglevel=logging.DEBUG)
-    s.setup()
-    if not s.turnOn(): exit(1)
-    if not s.setEchoOff(): exit(1)
-    print("Good to go!")
-    print(s.getIMEI())
-    print(s.getVersion())
-    print(s.getSIMCCID())
-    #print(s.getLastError())
-    ns=s.getNetworkStatus()
-    print(ns)
-    if ns not in (NetworkStatus.RegisteredHome, NetworkStatus.RegisteredRoaming):
-        exit(1)
-    print(s.getRSSI())
-    #print(s.enableNetworkTimeSync(True))
-    # print(s.getTime())
-    # print(s.setTime(datetime.now()))
-    # print(s.getTime())
-    # print(s.sendSMS("+441234567890", "Hello World!"))
-    print(s.sendUSSD(BALANCE_USSD))
-    #print(s.getLastError())
-    print(s.getNumSMS())
-    #print(s.readSMS(1))
-    #print(s.deleteSMS(1))
-    #print(s.readAllSMS())
