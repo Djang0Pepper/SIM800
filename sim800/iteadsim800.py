@@ -1,14 +1,19 @@
 from time import sleep
 
-import RPi.GPIO as IO, atexit, logging, sys
+try:
+    import RPi.GPIO as IO, atexit, logging, sys
+except ImportError:
+    raise ImportError( "Couldn't import RPi.GPIO. Installing it with pip could work: `pip install RPi.GPIO`" )
 
-from sim800.sim800 import SIM800, NetworkStatus
+from sim800 import SIM800, NetworkStatus
 
 
 GSM_ON=11
 GSM_RESET=12
-PORT="/dev/ttyS0"
-BAUD=9600
+#PORT="/dev/ttyS0"
+PORT="/dev/ttyAMA0"     # this port is right for RPi 3B+
+BAUD=9600              # ITead's specs say this...
+#BAUD=115200             # .. but this works too :)
 
 BALANCE_USSD="*100#"
 
@@ -28,12 +33,21 @@ def cleanup():
 class IteadSIM800( SIM800 ):
 
     def __init__( self, port=PORT, baud=BAUD, logger=None, loglevel=logging.WARNING ):
+
+        # TODO: autodetect port
+
         super( IteadSIM800, self ).__init__(
             port,
             baud,
             logger = logger,
             loglevel = loglevel 
         )
+
+
+    def startup( self ):
+        self.setup()
+        if not self.turnOn(): exit(1)
+        if not self.setEchoOff(): exit(1)
 
 
     def setup( self ):
@@ -79,9 +93,13 @@ if __name__=="__main__":
     # print(s.setTime(datetime.now()))
     # print(s.getTime())
     # print(s.sendSMS("+441234567890", "Hello World!"))
-    print(s.sendUSSD(BALANCE_USSD))
+    # print(s.sendSMS("150", "NUMBER")) # gets this phone's number on EE in the UK
+    # print(s.sendUSSD(BALANCE_USSD))
     #print(s.getLastError())
+    n, t = s.getNumSMS()
     print(s.getNumSMS())
-    #print(s.readSMS(1))
+    if n > 0:
+        for i in range(1,n):
+            print( s.readSMS(i) )
     #print(s.deleteSMS(1))
     #print(s.readAllSMS())
