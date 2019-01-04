@@ -20,4 +20,7 @@ setuptools.setup(
         "Topic :: Communications :: Telephony",
         "Topic :: System :: Hardware"
     ],
+    install_requires=[
+        "pyserial"
+    ]
 )
