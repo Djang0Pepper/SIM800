@@ -493,9 +493,9 @@ class SIM800( object ):
         """
         while True:
             l = self.getLine()
-            self._logger.debug( "waitForLine got line: %r" % l )
+            self._logger.debug( "waitForLine got line: %r", l )
             if l == line:
-                break
+                return l
 
 
     def waitForRing( self ):
@@ -517,3 +517,11 @@ class SIM800( object ):
         Convenience method. Hang up current call.
         """
         return self.sendATCmdWaitResp( "ATH", "OK" )
+    
+
+    def waitForHangUp( self ):
+        """
+        Convenience method. Wait for the current call to hang up.
+        """
+        return self.waitForLine( "NO CARRIER" )
+        
